@@ -1,2 +1,4 @@
 data/db/*.db
 data/img/*.png
+__pycache__/
+.coverage
