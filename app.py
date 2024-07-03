@@ -13,7 +13,7 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 app.config['IMG_WIDTH'] = 640
 app.config['IMG_UPLOAD_FOLDER'] = './data/img'
 app.config['DB_LOCATION'] = 'data/db/my_feedback.db'
-app.config['production'] = False 
+app.config['production'] = True 
 
 # Create a SQLite database and table
 conn = sqlite3.connect(app.config['DB_LOCATION'])
