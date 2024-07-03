@@ -1,1 +1,2 @@
-data/data.db
+data/db/*.db
+data/img/*.png
