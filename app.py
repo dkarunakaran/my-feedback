@@ -1,15 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 import os
-import sys
-from PIL import Image
-import argparse
 import cv2
 import sqlite3
-import re
-import pandas as pd
-from collections import defaultdict
-import base64
 import uuid
 
 app = Flask(__name__)
@@ -20,6 +13,7 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 app.config['IMG_WIDTH'] = 640
 app.config['IMG_UPLOAD_FOLDER'] = './data/img'
 app.config['DB_LOCATION'] = 'data/db/my_feedback.db'
+app.config['production'] = False 
 
 # Create a SQLite database and table
 conn = sqlite3.connect(app.config['DB_LOCATION'])
@@ -64,15 +58,19 @@ def add():
 
 @app.route("/insert_types", methods=['GET'])
 def insert_types():
-  conn = sqlite3.connect(app.config['DB_LOCATION'])
-  cursor = conn.cursor()
-  types= ['Restaurant', 'Grocery','Food','Experience', 'Electronics', 'Toys']
-  for name in types:
-    cursor.execute("""INSERT INTO Type (name) VALUES (?)""", [name])
-    conn.commit()
-  conn.close()
   
-  return "Inserting types data is successful"
+  if app.config['production'] is not True:
+    conn = sqlite3.connect(app.config['DB_LOCATION'])
+    cursor = conn.cursor()
+    types= ['Restaurant', 'Grocery','Food','Experience', 'Electronics', 'Toys']
+    for name in types:
+        cursor.execute("""INSERT INTO Type (name) VALUES (?)""", [name])
+        conn.commit()
+    conn.close()
+    
+    return "Inserting types data is successful"
+  else:
+    return "Not allowed in prod enviornment"
 
 
 def resize_with_aspect_ratio(image, width=None, height=None):
