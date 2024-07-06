@@ -4,6 +4,8 @@ import os
 import cv2
 import sqlite3
 import uuid
+from datetime import datetime, date, time
+import pytz
 
 app = Flask(__name__)
 
@@ -15,6 +17,8 @@ app.config['IMG_UPLOAD_FOLDER'] = './data/img'
 app.config['DB_LOCATION'] = 'data/db/my_feedback.db'
 app.config['production'] = True 
 
+tz = pytz.timezone('Australia/Sydney')
+
 # Create a SQLite database and table
 conn = sqlite3.connect(app.config['DB_LOCATION'])
 cursor = conn.cursor()
@@ -24,7 +28,9 @@ cursor.execute('''
         title TEXT NOT NULL,
         detail TEXT NOT NULL,
         type_id INTEGER NOT NULL,
+        sub_type TEXT NOT NULL,
         img_name TEXT NOT NULL,
+        created_date TEXT NOT NULL,
         CONSTRAINT fk_type  
         FOREIGN KEY (type_id) 
         REFERENCES Type(type_id) 
@@ -62,7 +68,7 @@ def insert_types():
   if app.config['production'] is not True:
     conn = sqlite3.connect(app.config['DB_LOCATION'])
     cursor = conn.cursor()
-    types= ['Restaurant', 'Grocery','Food','Experience', 'Electronics', 'Toys']
+    types= ['Restaurant', 'Grocery','Food','Experience', 'Electronics', 'Toys', 'Other']
     for name in types:
         cursor.execute("""INSERT INTO Type (name) VALUES (?)""", [name])
         conn.commit()
@@ -112,6 +118,7 @@ def upload_file():
     title = request.form['title'].lower()
     detail = request.form['feedback']
     type_id = request.form['type']
+    sub_type = request.form['sub_type']
     if title != "" and detail != "" and request.method == 'POST':
         
         f = request.files['file']
@@ -138,14 +145,19 @@ def upload_file():
         # save the processed image in the /static/uploads directory
         ofilename = os.path.join(app.config['IMG_UPLOAD_FOLDER'],image_name)
         cv2.imwrite(ofilename, image)
-        
+        created_datetime = datetime.now(tz)
 
         conn = sqlite3.connect(app.config['DB_LOCATION'])
         cursor = conn.cursor()
-        cursor.execute("""INSERT INTO Feedback (title, detail, type_id, img_name) VALUES (?, ?, ?, ?)""", [title.lower(), detail, type_id, image_name])
-        conn.commit()     
+        cursor.execute("""INSERT INTO Feedback (title, detail, type_id, sub_type, img_name, created_date) VALUES (?, ?, ?, ?, ?, ?)""", [title.lower(), detail, type_id, sub_type, image_name, created_datetime])
+        conn.commit()    
 
-        return render_template("uploaded.html")
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, name FROM Type') 
+        types = cursor.fetchall()
+        conn.close() 
+
+        return render_template("uploaded.html", types=types)
 
     else:
         return render_template("error.html")

@@ -12,3 +12,4 @@ werkzeug>=2.0
 pytest==6.2.3
 pytest-cov==2.11.1
 pylint==2.7.4
+pytz
