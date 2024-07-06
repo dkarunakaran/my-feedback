@@ -68,7 +68,7 @@ def insert_types():
   if app.config['production'] is not True:
     conn = sqlite3.connect(app.config['DB_LOCATION'])
     cursor = conn.cursor()
-    types= ['Restaurant', 'Grocery','Food','Experience', 'Electronics', 'Toys']
+    types= ['Restaurant', 'Grocery','Food','Experience', 'Electronics', 'Toys', 'Other']
     for name in types:
         cursor.execute("""INSERT INTO Type (name) VALUES (?)""", [name])
         conn.commit()
