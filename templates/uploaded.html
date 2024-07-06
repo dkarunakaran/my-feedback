@@ -36,12 +36,15 @@
     </div>
     <label for="exampleDataList" class="form-label">Type</label>
     <div class="input-group mb-3">
-        <select class="form-control" name="type" id="type">
-          <option value="1">Restaurant</option>
-          <option value="2">Grocery</option>
-          <option value="3">Food</option>
-          <option value="4">Experience</option>
-        </select>
+      <select class="form-control" name="type" id="type">
+        {%for id, name in types%}
+          <option value="{{id}}">{{name}} </option>
+        {%endfor%}
+      </select>
+    </div>
+    <label class="form-label">Sub Type</label>
+    <div class="input-group mb-3">
+      <input type="text" class="form-control" id="sub_type" aria-describedby="basic-addon3" name="sub_type">
     </div>
     <label class="form-label">Upload the image</label>
     <div class="input-group  mb-3">
