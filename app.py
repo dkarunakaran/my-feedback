@@ -29,6 +29,7 @@ cursor.execute('''
         detail TEXT NOT NULL,
         type_id INTEGER NOT NULL,
         sub_type TEXT NOT NULL,
+        loc TEXT NOT NULL,
         img_name TEXT NOT NULL,
         created_date TEXT NOT NULL,
         CONSTRAINT fk_type  
@@ -119,6 +120,7 @@ def upload_file():
     detail = request.form['feedback']
     type_id = request.form['type']
     sub_type = request.form['sub_type']
+    loc = request.form['location']
     if title != "" and detail != "" and request.method == 'POST':
         
         f = request.files['file']
@@ -149,7 +151,7 @@ def upload_file():
 
         conn = sqlite3.connect(app.config['DB_LOCATION'])
         cursor = conn.cursor()
-        cursor.execute("""INSERT INTO Feedback (title, detail, type_id, sub_type, img_name, created_date) VALUES (?, ?, ?, ?, ?, ?)""", [title.lower(), detail, type_id, sub_type, image_name, created_datetime])
+        cursor.execute("""INSERT INTO Feedback (title, detail, type_id, sub_type, loc, img_name, created_date) VALUES (?, ?, ?, ?, ?, ?, ?)""", [title.lower(), detail, type_id, sub_type, loc, image_name, created_datetime])
         conn.commit()    
 
         cursor = conn.cursor()
