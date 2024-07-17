@@ -49,8 +49,27 @@ conn.close()
 
 @app.route("/")
 def index():
+  conn = sqlite3.connect(app.config['DB_LOCATION'])
+  cursor = conn.cursor()
+  cursor.execute('SELECT id, title, detail, loc, img_name, created_date FROM Feedback') 
+  feedbacks = cursor.fetchall()
+  conn.close()
+  data = []
+  for feedback in feedbacks:
+    sample = []
+    sample.append(feedback[0])
+    sample.append(feedback[1])
+    sample.append(feedback[2])
+    sample.append(feedback[3])
+    if feedback[4] == "":
+        sample.append('No')
+    else:
+        sample.append('Yes')
+    sample.append(feedback[5])
+    data.append(sample)
+     
   
-  return render_template("index.html")
+  return render_template("index.html", feedbacks=data)
 
 @app.route("/add")
 def add():
@@ -121,45 +140,61 @@ def upload_file():
     type_id = request.form['type']
     sub_type = request.form['sub_type']
     loc = request.form['location']
+    image_name = ""
     if title != "" and detail != "" and request.method == 'POST':
         
         f = request.files['file']
+        if f.filename != "":
 
-        # create a secure filename
-        filename = secure_filename(f.filename)
+            # create a secure filename
+            filename = secure_filename(f.filename)
 
-        # save file to /static/uploads
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'],filename)
-        f.save(filepath)
+            # save file to /static/uploads
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'],filename)
+            f.save(filepath)
+            
+            # load the example image and convert it to grayscale
+            image = cv2.imread(filepath)
+
+            # Resize the image with an aspect ratio
+            image = resize_with_aspect_ratio(image, width=app.config['IMG_WIDTH'] )
+
+            # remove the original image
+            os.remove(filepath)
+
+            unique_filename = str(uuid.uuid4())
+            image_name = "{}.png".format(unique_filename)
+
+            # save the processed image in the /static/uploads directory
+            ofilename = os.path.join(app.config['IMG_UPLOAD_FOLDER'],image_name)
+            cv2.imwrite(ofilename, image)
         
-        # load the example image and convert it to grayscale
-        image = cv2.imread(filepath)
-
-        # Resize the image with an aspect ratio
-        image = resize_with_aspect_ratio(image, width=app.config['IMG_WIDTH'] )
-
-        # remove the original image
-        os.remove(filepath)
-
-        unique_filename = str(uuid.uuid4())
-        image_name = "{}.png".format(unique_filename)
-
-        # save the processed image in the /static/uploads directory
-        ofilename = os.path.join(app.config['IMG_UPLOAD_FOLDER'],image_name)
-        cv2.imwrite(ofilename, image)
         created_datetime = datetime.now(tz)
-
         conn = sqlite3.connect(app.config['DB_LOCATION'])
         cursor = conn.cursor()
         cursor.execute("""INSERT INTO Feedback (title, detail, type_id, sub_type, loc, img_name, created_date) VALUES (?, ?, ?, ?, ?, ?, ?)""", [title.lower(), detail, type_id, sub_type, loc, image_name, created_datetime])
         conn.commit()    
 
         cursor = conn.cursor()
-        cursor.execute('SELECT id, name FROM Type') 
-        types = cursor.fetchall()
-        conn.close() 
+        cursor.execute('SELECT id, title, detail, loc, img_name, created_date FROM Feedback') 
+        feedbacks = cursor.fetchall()
+        conn.close()
 
-        return render_template("uploaded.html", types=types)
+        feedback_data = []
+        for feedback in feedbacks:
+            sample = []
+            sample.append(feedback[0])
+            sample.append(feedback[1])
+            sample.append(feedback[2])
+            sample.append(feedback[3])
+            if feedback[4] == "":
+                sample.append('No')
+            else:
+                sample.append('Yes')
+            sample.append(feedback[5])
+            feedback_data.append(sample)
+
+        return render_template("index.html", feedbacks=feedback_data)
 
     else:
         return render_template("error.html")
